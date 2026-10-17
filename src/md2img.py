@@ -235,6 +235,24 @@ def _markdown_to_image_wkhtml(
         return None
 
 
+def _persist_png(data: Optional[bytes]) -> Optional[bytes]:
+    """把生成的图片落盘到 reports/images/,让它能作为 Actions 产物留档。"""
+    if not data:
+        return data
+    try:
+        import time as _time
+
+        out_dir = os.path.join("reports", "images")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, "report_%s.png" % _time.strftime("%Y%m%d_%H%M%S"))
+        with open(out_path, "wb") as f:
+            f.write(data)
+        logger.info("Markdown 图片已保存: %s (%d 字节)", out_path, len(data))
+    except Exception as e:
+        logger.warning("保存 Markdown 图片失败: %s", e)
+    return data
+
+
 def markdown_to_image(
     markdown_text: str,
     max_chars: int = 15000,
@@ -278,7 +296,9 @@ def markdown_to_image(
         branding = share_image_branding_from_config(object())
 
     if engine == "markdown-to-file":
-        return _markdown_to_image_m2f(markdown_text, structured_payload, branding)
-    if engine == "playwright":
-        return _markdown_to_image_playwright(markdown_text, structured_payload, branding)
-    return _markdown_to_image_wkhtml(markdown_text, structured_payload, branding)
+        data = _markdown_to_image_m2f(markdown_text, structured_payload, branding)
+    elif engine == "playwright":
+        data = _markdown_to_image_playwright(markdown_text, structured_payload, branding)
+    else:
+        data = _markdown_to_image_wkhtml(markdown_text, structured_payload, branding)
+    return _persist_png(data)
