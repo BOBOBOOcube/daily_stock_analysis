@@ -69,9 +69,9 @@ def fetch_sector():
 def pick_columns(df):
     cols = list(df.columns)
     name_col = next((c for c in cols if ("板块" in c and "名称" in c)
-                     or c in ("名称", "行业名称", "板块名称")), None)
+                     or c in ("名称", "行业名称", "板块名称", "板块")), None)
     if not name_col:
-        name_col = next((c for c in cols if "名称" in c), None)
+        name_col = next((c for c in cols if "名称" in c or "板块" in c), None)
     chg_col = next((c for c in cols if "涨跌幅" in c), None)
     up_col = next((c for c in cols if "上涨家数" in c), None)
     down_col = next((c for c in cols if "下跌家数" in c), None)
