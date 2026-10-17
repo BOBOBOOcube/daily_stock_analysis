@@ -30,6 +30,31 @@ from src.share_image import (
 logger = logging.getLogger(__name__)
 
 
+
+def _shrink_png(data: bytes, limit: int = 2 * 1024 * 1024) -> bytes:
+    """PIL 可用时逐级缩小,保证不超过企业微信 2MB 上限。"""
+    try:
+        from PIL import Image
+        import io as _io
+    except ImportError:
+        return data
+    try:
+        if len(data) <= limit:
+            return data
+        im = Image.open(_io.BytesIO(data))
+        scale = 1.0
+        while len(data) > limit and scale > 0.25:
+            scale -= 0.15
+            w, h = im.size
+            im2 = im.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
+            buf = _io.BytesIO()
+            im2.save(buf, format="PNG", optimize=True)
+            data = buf.getvalue()
+        return data
+    except Exception as e:
+        logger.warning("PNG 压缩失败,保持原图: %s", e)
+        return data
+
 def _share_image_branding(config: object) -> ShareImageBranding:
     return share_image_branding_from_config(config)
 
@@ -189,12 +214,14 @@ def _markdown_to_image_wkhtml(
             "encoding": "UTF-8",
             "width": 1080,
             "disable-smart-width": "",
-            "quality": 95,
+            "quality": 90,
             "quiet": "",
+            # 企业微信图片上限约 2MB,长报告需要缩小渲染
+            "zoom": 0.55,
         }
         out = imgkit.from_string(html, False, options=options)
         if out and isinstance(out, bytes) and len(out) > 0:
-            return out
+            return _shrink_png(out)
         logger.warning("imgkit.from_string returned empty or invalid result")
         return None
     except OSError as e:
