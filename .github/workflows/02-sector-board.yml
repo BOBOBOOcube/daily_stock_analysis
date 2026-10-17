@@ -1,0 +1,35 @@
+name: 行业板块行情图
+
+on:
+  schedule:
+    # 每个工作日北京时间 18:15（UTC 10:15），比股票分析晚 15 分钟
+    - cron: '15 10 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: sector-board
+  cancel-in-progress: false
+
+jobs:
+  sector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: |
+          pip install -q akshare matplotlib requests
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-wqy-zenhei
+
+      - name: 生成板块行情图并推送
+        env:
+          WECHAT_WEBHOOK_URL: ${{ secrets.WECHAT_WEBHOOK_URL }}
+        run: python .github/scripts/sector_board_push.py
