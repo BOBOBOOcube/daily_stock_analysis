@@ -58,6 +58,7 @@ jobs:
 
       - name: 安装 Markdown 转图片工具
         run: |
+          pip install -q pillow
           sudo apt-get update -qq
           sudo apt-get install -y -qq wkhtmltopdf fonts-noto-cjk fonts-wqy-zenhei
           which wkhtmltoimage && echo "✅ wkhtmltoimage OK"
