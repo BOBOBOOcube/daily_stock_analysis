@@ -161,6 +161,18 @@ def main():
         img = buf2.read()
         print("降采样后大小:", len(img))
 
+    # 落盘一份,便于作为 Actions 产物留档(微信里只有图,拿不到文件)
+    try:
+        os.makedirs("reports", exist_ok=True)
+        out_path = os.path.join(
+            "reports", "sector_board_%s.png" % time.strftime("%Y%m%d")
+        )
+        with open(out_path, "wb") as f:
+            f.write(img)
+        print("板块图已保存:", out_path, len(img), "字节")
+    except Exception as e:
+        print("!! 保存板块图失败:", type(e).__name__, str(e)[:200])
+
     webhook = os.environ.get("WECHAT_WEBHOOK_URL", "")
     if not webhook:
         print("!! 未配置 WECHAT_WEBHOOK_URL,只生图不推送")
