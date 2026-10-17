@@ -33,3 +33,13 @@ jobs:
         env:
           WECHAT_WEBHOOK_URL: ${{ secrets.WECHAT_WEBHOOK_URL }}
         run: python .github/scripts/sector_board_push.py
+
+      - name: 上传板块图产物
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: sector-board-${{ github.run_number }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
